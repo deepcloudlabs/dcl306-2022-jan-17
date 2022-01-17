@@ -15,6 +15,7 @@ class App extends React.PureComponent {
         };
     }
 
+    //region game logic methods
     createSecret = (level) => {
         let numbers = [this.createDigit(1, 9)];
         while (numbers.length < level) {
@@ -94,6 +95,7 @@ class App extends React.PureComponent {
     componentDidMount() {
         setInterval(this.countDown, 1000);
     }
+    //endregion
 
     render = () => {
         return (
@@ -133,6 +135,34 @@ class App extends React.PureComponent {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <p></p>
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">Moves</h3>
+                    </div>
+                    <div className="card-body">
+                         <table className="table table-bordered table-hover table-striped table-responsive">
+                             <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Guess</th>
+                                    <th>Message</th>
+                                </tr>
+                             </thead>
+                             <tbody>
+                             {
+                                 this.state.moves.map((move,index) =>
+                                    <tr key={move.guess + index.toString()}>
+                                        <td>{index+1}</td>
+                                        <td>{move.guess}</td>
+                                        <td>{move.message}</td>
+                                    </tr>
+                                 )
+                             }
+                             </tbody>
+                         </table>
                     </div>
                 </div>
             </div>
