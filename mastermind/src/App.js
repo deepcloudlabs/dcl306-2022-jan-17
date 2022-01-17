@@ -1,11 +1,12 @@
 import React from "react";
+import Move from "./move";
 
 // Stateful Component
 class App extends React.PureComponent {
     constructor(props, context) {
         super(props, context);
         this.state = {
-            secret : this.createSecret(3),
+            secret: this.createSecret(3),
             level: 3,
             tries: 0,
             guess: 123,
@@ -15,17 +16,83 @@ class App extends React.PureComponent {
     }
 
     createSecret = (level) => {
-        let numbers=[this.createDigit(1,9)];
-        while (numbers.length < level){
-            let digit = this.createDigit(0,9);
+        let numbers = [this.createDigit(1, 9)];
+        while (numbers.length < level) {
+            let digit = this.createDigit(0, 9);
             if (!numbers.includes(digit))
                 numbers.push(digit);
         }
-        return numbers.reduce((number,digit) => 10*number+digit, 0);
+        return numbers.reduce((number, digit) => 10 * number + digit, 0);
     }
 
     createDigit = (min, max) => {
-        return Math.floor(Math.random()*(max-min+1)+min);
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    play = () => {
+        let game = {...this.state}
+        if (game.secret === game.guess) {
+            game.level++;
+            game.counter = 60;
+            game.tries = 0;
+            game.moves = []
+            game.secret = this.createSecret(game.level);
+        } else {
+            game.tries++;
+            let message = this.createMessage(game.guess, game.secret);
+            game.moves.push(new Move(game.guess, message));
+        }
+        this.setState(game);
+    }
+
+    createMessage = (guess, secret) => {
+        let guessAsString = guess.toString();
+        let secretAsString = secret.toString();
+        let perfectMatch = 0;
+        let partialMatch = 0;
+        for (let i = 0; i < guessAsString.length; ++i) {
+            let g = guessAsString.charAt(i);
+            for (let j = 0; j < secretAsString.length; ++j) {
+                let s = secretAsString.charAt(j);
+                if (s === g) {
+                    if (i === j)
+                        perfectMatch++;
+                    else
+                        partialMatch++;
+                }
+            }
+        }
+        if (perfectMatch === 0 && partialMatch === 0)
+            return "No match";
+        let message = "";
+        if (partialMatch>0)
+            message = `-${partialMatch}`;
+        if (perfectMatch>0)
+            message += `+${perfectMatch}`;
+        return message;
+    }
+
+    countDown = () => {
+        let game = {...this.state}
+        if (game.counter <= 0) {
+            game.counter = 60;
+            game.tries = 0;
+            game.moves = []
+            game.secret = this.createSecret(game.level);
+        } else {
+            game.counter = game.counter - 1;
+        }
+        this.setState(game);
+    }
+
+    handleChange = (event) => {
+        let game = {...this.state}
+        game.guess = Number(event.target.value);
+        this.setState(game);
+    }
+
+    componentDidMount() {
+        setInterval(this.countDown, 1000);
     }
 
     render = () => {
@@ -54,12 +121,15 @@ class App extends React.PureComponent {
                         <div className="form-group">
                             <label className="form-label" htmlFor="guess">Guess:</label>
                             <div className="input-group mb-3">
-                            <input type="text"
-                                   id="counter"
-                                   value={this.state.guess}
-                                  className="form-control"></input>
+                                <input type="text"
+                                       id="counter"
+                                       value={this.state.guess}
+                                       onChange={this.handleChange}
+                                       className="form-control"></input>
                                 <div className="input-group-append">
-                                    <button className="btn btn-success">Play</button>
+                                    <button onClick={this.play}
+                                            className="btn btn-success">Play
+                                    </button>
                                 </div>
                             </div>
                         </div>
