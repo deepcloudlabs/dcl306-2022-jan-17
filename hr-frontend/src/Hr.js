@@ -24,13 +24,53 @@ class Hr extends React.PureComponent {
 
     handleFileChange = (event) => {
         const filename = event.target.files[0];
-        const reader= new FileReader();
+        const reader = new FileReader();
         reader.onload = (e) => {
             let employee = {...this.state.employee};
             employee.photo = e.target.result;
             this.setState({employee})
         }
         reader.readAsDataURL(filename);
+    }
+
+    hireEmployee = () => {
+        let employee = {...this.state.employee};
+        fetch("http://localhost:9100/hr/api/v1/employees",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type" : "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(employee)
+            }).then( response => response.json())
+            .then(res => alert("Employee is hired!"))
+    }
+
+    updateEmployee = () => {
+
+    }
+
+    fireEmployee = () => {
+
+    }
+
+    findEmployeeByIdentity = () => {
+
+    }
+
+    findEmployees = () => {
+        fetch("http://localhost:9100/hr/api/v1/employees?page=0&size=10",
+            {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }).then( response => response.json())
+            .then(employees => {
+                this.setState({employees});
+            })
+
     }
 
     render() {
@@ -78,7 +118,7 @@ class Hr extends React.PureComponent {
                             <label htmlFor="department">Department:</label>
                             <select id="department"
                                     name="department"
-                                   onChange={this.handleInputChange}
+                                    onChange={this.handleInputChange}
                                     value={this.state.employee.department}
                                     className="form-control">
                                 <option>FINANCE</option>
@@ -100,7 +140,7 @@ class Hr extends React.PureComponent {
                             <div className="checkbox">
                                 <label><input
                                     name="fulltime"
-                                   onChange={this.handleInputChange}
+                                    onChange={this.handleInputChange}
                                     checked={this.state.employee.fulltime}
                                     type="checkbox"></input>Full time?</label>
                             </div>
@@ -125,15 +165,15 @@ class Hr extends React.PureComponent {
                             </div>
                         </div>
                         <div className="form-group">
-                            <button className="btn btn-info">Add
+                            <button onClick={this.hireEmployee} className="btn btn-info">Add
                             </button>
-                            <button className="btn btn-warning">Update
+                            <button onClick={this.updateEmployee} className="btn btn-warning">Update
                             </button>
-                            <button className="btn btn-danger">Delete
+                            <button onClick={this.fireEmployee} className="btn btn-danger">Delete
                             </button>
-                            <button className="btn btn-success">Find
+                            <button onClick={this.findEmployeeByIdentity} className="btn btn-success">Find
                             </button>
-                            <button className="btn btn-success">Find All</button>
+                            <button onClick={this.findEmployees} className="btn btn-success">Find All</button>
                         </div>
 
                     </div>
@@ -144,7 +184,39 @@ class Hr extends React.PureComponent {
                         <h4 className="card-title">Employees</h4>
                     </div>
                     <div className="card-body">
-
+                        <table className="table table-bordered table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Photo</th>
+                                    <th>Identity</th>
+                                    <th>Full Name</th>
+                                    <th>Iban</th>
+                                    <th>Salary</th>
+                                    <th>Full-time?</th>
+                                    <th>Birth Year</th>
+                                    <th>Department</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {
+                                this.state.employees.map( (employee,index) => (
+                                    <tr>
+                                        <td>{index+1}</td>
+                                        <td><img className="img-thumbnail" style={{width: '128px'}} src={employee.photo}></img></td>
+                                        <td>{employee.identity}</td>
+                                        <td>{employee.fullname}</td>
+                                        <td>{employee.iban}</td>
+                                        <td>{employee.salary}</td>
+                                        <td>{employee.fulltime ? 'FULL TIME' : 'PART TIME'}</td>
+                                        <td>{employee.birthYear}</td>
+                                        <td>{employee.department}</td>
+                                    </tr>
+                                )
+                                )
+                            }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
