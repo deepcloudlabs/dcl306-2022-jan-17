@@ -14,9 +14,10 @@ class App extends React.PureComponent {
                 tries: 0,
                 guess: 123,
                 moves: [],
-                counter: 60
+                counter: 60,
+                lives: 3
             },
-            statistics : {
+            statistics: {
                 wins: 0,
                 loses: 0,
                 total: 0,
@@ -63,9 +64,9 @@ class App extends React.PureComponent {
         if (perfectMatch === 0 && partialMatch === 0)
             return "No match";
         let message = "";
-        if (partialMatch>0)
+        if (partialMatch > 0)
             message = `-${partialMatch}`;
-        if (perfectMatch>0)
+        if (perfectMatch > 0)
             message += `+${perfectMatch}`;
         return message;
     }
@@ -76,20 +77,26 @@ class App extends React.PureComponent {
         let game = {...this.state.game}
         let statistics = {...this.state.statistics}
         if (game.secret === game.guess) {
-            statistics.wins++;
-            statistics.total++;
-            statistics.totalWinsMoves += game.tries;
-            statistics.avgWinsMoves = statistics.totalWinsMoves / statistics.wins;
+            if (game.level === 10) {
+                statistics.wins++;
+                statistics.total++;
+                statistics.totalWinsMoves += game.tries;
+                statistics.avgWinsMoves = statistics.totalWinsMoves / statistics.wins;
+                this.props.history.push("/wins");
+                return;
+            }
             game.level++;
             game.counter = 60;
             game.tries = 0;
             game.moves = []
+            game.lives = 3;
             game.secret = this.createSecret(game.level);
         } else {
             game.tries++;
             let message = this.createMessage(game.guess, game.secret);
             game.moves.push(new Move(game.guess, message));
         }
+        localStorage.setItem("mastermind-game-state", JSON.stringify({game, statistics}));
         this.setState({game, statistics});
     }
 
@@ -97,15 +104,21 @@ class App extends React.PureComponent {
         let game = {...this.state.game}
         let statistics = {...this.state.statistics}
         if (game.counter <= 0) {
-            game.counter = 60;
-            game.tries = 0;
-            game.moves = []
-            game.secret = this.createSecret(game.level);
-            statistics.loses++;
+            if (game.lives === 0) {
+                this.props.history.push("/loses");
+                statistics.loses++;
+            } else {
+                game.lives--;
+                game.counter = 60;
+                game.tries = 0;
+                game.moves = []
+                game.secret = this.createSecret(game.level);
+            }
         } else {
             game.counter = game.counter - 1;
         }
-        this.setState({game,statistics});
+        localStorage.setItem("mastermind-game-state", JSON.stringify({game, statistics}));
+        this.setState({game, statistics});
     }
 
     handleChange = (event) => {
@@ -117,6 +130,14 @@ class App extends React.PureComponent {
 
     //region lifecycle callback methods
     componentDidMount() {
+        let gameState = localStorage.getItem("mastermind-game-state");
+        if (gameState === null || gameState === undefined) {
+            let state = {...this.state};
+            localStorage.setItem("mastermind-game-state", JSON.stringify(state));
+        } else {
+            let state = JSON.parse(gameState);
+            this.setState(state);
+        }
         setInterval(this.countDown, 1000);
     }
 
@@ -163,26 +184,26 @@ class App extends React.PureComponent {
                         <h3 className="card-title">Moves</h3>
                     </div>
                     <div className="card-body">
-                         <table className="table table-bordered table-hover table-striped table-responsive">
-                             <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Guess</th>
-                                    <th>Message</th>
-                                </tr>
-                             </thead>
-                             <tbody>
-                             {
-                                 this.state.game.moves.map((move,index) =>
+                        <table className="table table-bordered table-hover table-striped table-responsive">
+                            <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Guess</th>
+                                <th>Message</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {
+                                this.state.game.moves.map((move, index) =>
                                     <tr key={move.guess + index.toString()}>
-                                        <td>{index+1}</td>
+                                        <td>{index + 1}</td>
                                         <td>{move.guess}</td>
                                         <td>{move.message}</td>
                                     </tr>
-                                 )
-                             }
-                             </tbody>
-                         </table>
+                                )
+                            }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <p></p>
