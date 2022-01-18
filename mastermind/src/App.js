@@ -1,6 +1,7 @@
 import React from "react";
 import Move from "./move";
 import Badge from "./component/badge";
+import GameStatistics from "./component/game-statistics";
 
 // Stateful Component
 class App extends React.PureComponent {
@@ -33,7 +34,9 @@ class App extends React.PureComponent {
             if (!numbers.includes(digit))
                 numbers.push(digit);
         }
-        return numbers.reduce((number, digit) => 10 * number + digit, 0);
+        let secret = numbers.reduce((number, digit) => 10 * number + digit, 0);
+        console.log(secret)
+        return secret;
     }
 
     createDigit = (min, max) => {
@@ -92,15 +95,17 @@ class App extends React.PureComponent {
 
     countDown = () => {
         let game = {...this.state.game}
+        let statistics = {...this.state.statistics}
         if (game.counter <= 0) {
             game.counter = 60;
             game.tries = 0;
             game.moves = []
             game.secret = this.createSecret(game.level);
+            statistics.loses++;
         } else {
             game.counter = game.counter - 1;
         }
-        this.setState({game});
+        this.setState({game,statistics});
     }
 
     handleChange = (event) => {
@@ -180,6 +185,8 @@ class App extends React.PureComponent {
                          </table>
                     </div>
                 </div>
+                <p></p>
+                <GameStatistics stats={this.state.statistics}></GameStatistics>
             </div>
         );
     }
