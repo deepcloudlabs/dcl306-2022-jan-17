@@ -69,6 +69,19 @@ class Market extends React.PureComponent {
         this.setState({isMonitoring: false});
     }
 
+    listenTradeMessage = (message) => {
+        let trade = JSON.parse(message.data);
+        console.log(trade);
+    }
+
+    componentDidMount = () => {
+        this.websocket = new WebSocket("ws://localhost:4400/trades");
+        this.websocket.onopen = (event) => {
+            alert("WebSocket connection to Service is ready!");
+        };
+        this.websocket.onmessage = this.listenTradeMessage;
+    }
+
     render() {
         let startStopButton ;
         if (this.state.isMonitoring){
