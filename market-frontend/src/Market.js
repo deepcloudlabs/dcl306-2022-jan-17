@@ -5,6 +5,7 @@ class Market extends React.PureComponent {
     constructor(props, context) {
         super(props, context);
         this.state = {
+            isMonitoring: false,
             symbol: "BTCUSDT",
             trades: [],
             movingAverage: [],
@@ -60,7 +61,21 @@ class Market extends React.PureComponent {
         }
     }
 
+    startMonitoring = () => {
+        this.setState({isMonitoring: true});
+    }
+
+    stopMonitoring = () => {
+        this.setState({isMonitoring: false});
+    }
+
     render() {
+        let startStopButton ;
+        if (this.state.isMonitoring){
+            startStopButton = <button onClick={this.stopMonitoring} className="btn btn-danger">Stop</button>
+        } else {
+            startStopButton = <button onClick={this.startMonitoring} className="btn btn-success">Start</button>
+        }
         return (
             <div className="container">
                 <div className="card">
@@ -84,8 +99,7 @@ class Market extends React.PureComponent {
                             </select>
                         </div>
                         <div className="form-group">
-                            <button className="btn btn-success">Start</button>
-                            <button className="btn btn-danger">Stop</button>
+                            {startStopButton}
                         </div>
                     </div>
                 </div>
