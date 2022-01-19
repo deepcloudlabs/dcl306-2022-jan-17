@@ -44,19 +44,58 @@ class Hr extends React.PureComponent {
                 },
                 body: JSON.stringify(employee)
             }).then( response => response.json())
-            .then(res => alert("Employee is hired!"))
+            .then(responseBody => alert("Employee is hired!"))
     }
 
     updateEmployee = () => {
+        let employee = {...this.state.employee};
+        let request = {...employee}
+        delete request.identity;
 
+        fetch(`http://localhost:9100/hr/api/v1/employees/${employee.identity}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type" : "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(request)
+            }).then( response => response.json())
+            .then(responseBody => alert("Employee is updated!"))
     }
 
     fireEmployee = () => {
-
+        let identity = this.state.employee.identity;
+        fetch(`http://localhost:9100/hr/api/v1/employees/${identity}`,
+            {
+                method: "DELETE",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }).then( response => response.json())
+            .then(response => {
+                if (response.hasOwnProperty('message'))
+                    alert(response.message)
+                else
+                    alert("Employee is fired!")
+            })
     }
 
     findEmployeeByIdentity = () => {
-
+        let identity = this.state.employee.identity;
+        fetch(`http://localhost:9100/hr/api/v1/employees/${identity}`,
+            {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }).then( response => response.json())
+            .then(response => {
+                if (!response.hasOwnProperty("message"))
+                   this.setState({employee: response});
+                else
+                    alert(response.message)
+            })
     }
 
     findEmployees = () => {
@@ -70,7 +109,6 @@ class Hr extends React.PureComponent {
             .then(employees => {
                 this.setState({employees});
             })
-
     }
 
     render() {
@@ -196,12 +234,13 @@ class Hr extends React.PureComponent {
                                     <th>Full-time?</th>
                                     <th>Birth Year</th>
                                     <th>Department</th>
+                                    <th>Operations</th>
                                 </tr>
                             </thead>
                             <tbody>
                             {
                                 this.state.employees.map( (employee,index) => (
-                                    <tr>
+                                    <tr key={employee.identity}>
                                         <td>{index+1}</td>
                                         <td><img className="img-thumbnail" style={{width: '128px'}} src={employee.photo}></img></td>
                                         <td>{employee.identity}</td>
@@ -211,6 +250,7 @@ class Hr extends React.PureComponent {
                                         <td>{employee.fulltime ? 'FULL TIME' : 'PART TIME'}</td>
                                         <td>{employee.birthYear}</td>
                                         <td>{employee.department}</td>
+                                        <td><button onClick={() => this.fireEmp(employee.identity)} className="btn btn-danger">Fire!</button></td>
                                     </tr>
                                 )
                                 )
