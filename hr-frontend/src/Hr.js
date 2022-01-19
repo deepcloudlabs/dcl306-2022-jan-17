@@ -115,6 +115,10 @@ class Hr extends React.PureComponent {
             })
     }
 
+    copyRow = (employee) => {
+        this.setState({employee});
+    }
+
     findEmployees = () => {
         fetch("http://localhost:9100/hr/api/v1/employees?page=0&size=10",
             {
@@ -257,14 +261,14 @@ class Hr extends React.PureComponent {
                             <tbody>
                             {
                                 this.state.employees.map((employee, index) => (
-                                        <tr key={employee.identity}>
+                                        <tr onClick={() => this.copyRow(employee)}
+                                             key={employee.identity}>
                                             <td>{index + 1}</td>
                                             <td><img className="img-thumbnail" style={{width: '128px'}}
                                                      src={employee.photo}></img></td>
                                             <td>{employee.identity}</td>
                                             <td>{employee.fullname}</td>
                                             <td>{employee.iban}</td>
-                                            <td>{employee.salary}</td>
                                             <td>{employee.fulltime ? 'FULL TIME' : 'PART TIME'}</td>
                                             <td>{employee.birthYear}</td>
                                             <td>{employee.department}</td>
