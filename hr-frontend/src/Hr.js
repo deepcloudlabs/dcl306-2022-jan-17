@@ -39,12 +39,21 @@ class Hr extends React.PureComponent {
             {
                 method: "POST",
                 headers: {
-                    "Content-Type" : "application/json",
+                    "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
                 body: JSON.stringify(employee)
-            }).then( response => response.json())
-            .then(responseBody => alert("Employee is hired!"))
+            }).then(response => response.json())
+            .then(response => {
+                if (response.hasOwnProperty('message'))
+                    alert(response.message);
+                else {
+                    alert("Employee is hired!");
+                    let employees = [...this.state.employees]
+                    employees.push(response);
+                    this.setState({employees});
+                }
+            })
     }
 
     updateEmployee = () => {
@@ -56,30 +65,38 @@ class Hr extends React.PureComponent {
             {
                 method: "PUT",
                 headers: {
-                    "Content-Type" : "application/json",
+                    "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
                 body: JSON.stringify(request)
-            }).then( response => response.json())
+            }).then(response => response.json())
             .then(responseBody => alert("Employee is updated!"))
     }
 
-    fireEmployee = () => {
-        let identity = this.state.employee.identity;
+    fireEmployee = (param) => {
+        let identity = param;
+        if (param.hasOwnProperty('target'))
+            identity = this.state.employee.identity;
         fetch(`http://localhost:9100/hr/api/v1/employees/${identity}`,
             {
                 method: "DELETE",
                 headers: {
                     "Accept": "application/json"
                 }
-            }).then( response => response.json())
+            }).then(response => response.json())
             .then(response => {
-                if (response.hasOwnProperty('message'))
-                    alert(response.message)
-                else
-                    alert("Employee is fired!")
-            })
+                    if (response.hasOwnProperty('message'))
+                        alert(response.message)
+                    else {
+                        alert("Employee is fired!");
+                        let employees = this.state.employees.filter(
+                            employee => employee.identity !== identity);
+                        this.setState({employees});
+                    }
+                }
+            )
     }
+
 
     findEmployeeByIdentity = () => {
         let identity = this.state.employee.identity;
@@ -89,10 +106,10 @@ class Hr extends React.PureComponent {
                 headers: {
                     "Accept": "application/json"
                 }
-            }).then( response => response.json())
+            }).then(response => response.json())
             .then(response => {
                 if (!response.hasOwnProperty("message"))
-                   this.setState({employee: response});
+                    this.setState({employee: response});
                 else
                     alert(response.message)
             })
@@ -105,7 +122,7 @@ class Hr extends React.PureComponent {
                 headers: {
                     "Accept": "application/json"
                 }
-            }).then( response => response.json())
+            }).then(response => response.json())
             .then(employees => {
                 this.setState({employees});
             })
@@ -224,35 +241,40 @@ class Hr extends React.PureComponent {
                     <div className="card-body">
                         <table className="table table-bordered table-striped table-hover">
                             <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Photo</th>
-                                    <th>Identity</th>
-                                    <th>Full Name</th>
-                                    <th>Iban</th>
-                                    <th>Salary</th>
-                                    <th>Full-time?</th>
-                                    <th>Birth Year</th>
-                                    <th>Department</th>
-                                    <th>Operations</th>
-                                </tr>
+                            <tr>
+                                <th>No</th>
+                                <th>Photo</th>
+                                <th>Identity</th>
+                                <th>Full Name</th>
+                                <th>Iban</th>
+                                <th>Salary</th>
+                                <th>Full-time?</th>
+                                <th>Birth Year</th>
+                                <th>Department</th>
+                                <th>Operations</th>
+                            </tr>
                             </thead>
                             <tbody>
                             {
-                                this.state.employees.map( (employee,index) => (
-                                    <tr key={employee.identity}>
-                                        <td>{index+1}</td>
-                                        <td><img className="img-thumbnail" style={{width: '128px'}} src={employee.photo}></img></td>
-                                        <td>{employee.identity}</td>
-                                        <td>{employee.fullname}</td>
-                                        <td>{employee.iban}</td>
-                                        <td>{employee.salary}</td>
-                                        <td>{employee.fulltime ? 'FULL TIME' : 'PART TIME'}</td>
-                                        <td>{employee.birthYear}</td>
-                                        <td>{employee.department}</td>
-                                        <td><button onClick={() => this.fireEmp(employee.identity)} className="btn btn-danger">Fire!</button></td>
-                                    </tr>
-                                )
+                                this.state.employees.map((employee, index) => (
+                                        <tr key={employee.identity}>
+                                            <td>{index + 1}</td>
+                                            <td><img className="img-thumbnail" style={{width: '128px'}}
+                                                     src={employee.photo}></img></td>
+                                            <td>{employee.identity}</td>
+                                            <td>{employee.fullname}</td>
+                                            <td>{employee.iban}</td>
+                                            <td>{employee.salary}</td>
+                                            <td>{employee.fulltime ? 'FULL TIME' : 'PART TIME'}</td>
+                                            <td>{employee.birthYear}</td>
+                                            <td>{employee.department}</td>
+                                            <td>
+                                                <button onClick={() => this.fireEmployee(employee.identity)}
+                                                        className="btn btn-danger">Fire!
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )
                                 )
                             }
                             </tbody>
