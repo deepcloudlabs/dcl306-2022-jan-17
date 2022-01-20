@@ -69,9 +69,42 @@ class Market extends React.PureComponent {
         this.setState({isMonitoring: false});
     }
 
+    handleWindowSizeChange = (event) => {
+        this.setState({windowSize: Number(event.target.value)});
+    }
+
     listenTradeMessage = (message) => {
+        if (!this.state.isMonitoring) return;
+        let trades = [...this.state.trades];
+        let movingAverage = [...this.state.movingAverage];
+
         let trade = JSON.parse(message.data);
-        console.log(trade);
+        trades.push(trade)
+        if (trades.length > this.state.windowSize) {
+            let index = trades.length - this.state.windowSize;
+            trades = trades.slice(index);
+        }
+        let averagePrice = trades.reduce((sum, trade) => sum + Number(trade.p), 0) / trades.length;
+        movingAverage.push(averagePrice);
+        if (movingAverage.length > this.state.windowSize) {
+            let index = movingAverage.length - this.state.windowSize;
+            movingAverage = movingAverage.slice(index);
+        }
+        let newData = {...this.state.data}
+        newData.datasets[0].data = trades.map(trade => trade.p);
+        newData.datasets[1].data = movingAverage;
+        newData.labels.push(new Date(trade.t).toLocaleTimeString());
+        if (newData.labels.length > this.state.windowSize) {
+            let index = newData.labels.length - this.state.windowSize;
+            newData.labels = newData.labels.slice(index);
+        }
+        if (newData.datasets[0].data.length > this.state.windowSize) {
+            let index = newData.datasets[0].data.length - this.state.windowSize;
+            newData.datasets[0].data = newData.datasets[0].data.slice(index);
+            newData.datasets[1].data = newData.datasets[1].data.slice(index);
+            newData.labels = newData.labels.slice(index);
+        }
+        this.setState({trades, movingAverage, data: newData});
     }
 
     componentDidMount = () => {
@@ -83,8 +116,8 @@ class Market extends React.PureComponent {
     }
 
     render() {
-        let startStopButton ;
-        if (this.state.isMonitoring){
+        let startStopButton;
+        if (this.state.isMonitoring) {
             startStopButton = <button onClick={this.stopMonitoring} className="btn btn-danger">Stop</button>
         } else {
             startStopButton = <button onClick={this.startMonitoring} className="btn btn-success">Start</button>
@@ -105,10 +138,14 @@ class Market extends React.PureComponent {
                         <div className="form-group">
                             <label htmlFor="windowSize" className="form-label">Window Size</label>
                             <select id="windowSize"
+                                    onChange={this.handleWindowSizeChange}
+                                    name="windowSize"
+                                    value={this.state.windowSize}
                                     className="form-select">
                                 <option label="10" value="10">10</option>
                                 <option label="25" value="25">25</option>
                                 <option label="50" value="50">50</option>
+                                <option label="100" value="100">100</option>
                             </select>
                         </div>
                         <div className="form-group">
