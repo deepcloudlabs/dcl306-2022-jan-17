@@ -3,8 +3,10 @@
 // class Game extends React.PureComponent {}
 // Hooks -> Stateful Component -> function
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import Badge from "./badge";
+import Move from "../model/move";
+import GameStatistics from "./game-statistics";
 
 export default function Game() {
     let initialGameState = {
@@ -23,14 +25,66 @@ export default function Game() {
     let [game, setGame] = useState(initialGameState);
     let [statistics, setStatistics] = useState(initialStatistics);
 
+    useEffect( () => {
+        let timerId = setInterval(countDown, 1000);
+        return () => {
+            clearInterval(timerId);
+        }
+    });
+
     function handleChange(event) {
         let newGame = {...game}
         newGame.guess = Number(event.target.value);
         setGame(newGame);
     }
 
-    function play(){
+    function countDown() {
+        let newGame = {...game}
+        let newStatistics = {...statistics}
+        newGame.counter--;
+        if (newGame.counter <= 0) {
+            initGame(newGame);
+            newStatistics.loses++;
+            newStatistics.total++;
+            setStatistics(newStatistics);
+        }
+        setGame(newGame);
+    }
 
+    function initGame(game) {
+        game.counter = getTimeOut(game.level);
+        game.secret = createSecret(game.level);
+        game.maxTries = createMaxTries(game.level);
+        game.tries = 0;
+        game.moves = [];
+    }
+
+    function play() {
+        let newGame = {...game};
+        let newStatistics = {...statistics};
+        if (newGame.secret===newGame.guess){
+            newGame.level++;
+            newStatistics.wins++;
+            newStatistics.total++;
+            initGame(newGame);
+            setGame(newGame);
+            setStatistics(newStatistics);
+        } else {
+            newGame.tries++;
+            if (newGame.tries > newGame.maxTries){
+                newStatistics.loses++;
+                newStatistics.total++;
+                setStatistics(newStatistics);
+                initGame(newGame);
+            } else {
+                let message = "Pick a smaller number";
+                if (newGame.guess < newGame.secret){
+                    message = "Pick a larger number";
+                }
+                newGame.moves.push(new Move(newGame.guess, message));
+            }
+            setGame(newGame);
+        }
     }
 
     //region game-related utility functions
@@ -64,6 +118,10 @@ export default function Game() {
                            label="Tries"
                            id="tries"
                            value={game.tries}></Badge>
+                    <Badge className="alert-primary"
+                           label="Remaining Tries"
+                           id="remainingTries"
+                           value={game.maxTries - game.tries}></Badge>
                     <Badge className="alert-danger"
                            label="Counter"
                            id="counter"
@@ -113,6 +171,8 @@ export default function Game() {
                     </table>
                 </div>
             </div>
+            <p></p>
+            <GameStatistics stats={statistics}></GameStatistics>
         </div>
     );
 }
