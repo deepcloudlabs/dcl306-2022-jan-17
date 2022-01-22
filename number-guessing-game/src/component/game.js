@@ -18,6 +18,7 @@ export default function Game() {
         maxTries: createMaxTries(2),
         counter: getTimeOut(2)
     }
+
     let initialStatistics = {
         wins: 0, loses: 0, total: 0
     }
@@ -25,7 +26,8 @@ export default function Game() {
     let [game, setGame] = useState(initialGameState);
     let [statistics, setStatistics] = useState(initialStatistics);
 
-    useEffect( () => {
+    //region action/life-cycle functions
+    useEffect(() => {
         let timerId = setInterval(countDown, 1000);
         return () => {
             clearInterval(timerId);
@@ -38,6 +40,9 @@ export default function Game() {
         setGame(newGame);
     }
 
+    //endregion
+
+    //region functions containing game-logic
     function countDown() {
         let newGame = {...game}
         let newStatistics = {...statistics}
@@ -62,7 +67,7 @@ export default function Game() {
     function play() {
         let newGame = {...game};
         let newStatistics = {...statistics};
-        if (newGame.secret===newGame.guess){
+        if (newGame.secret === newGame.guess) {
             newGame.level++;
             newStatistics.wins++;
             newStatistics.total++;
@@ -71,14 +76,14 @@ export default function Game() {
             setStatistics(newStatistics);
         } else {
             newGame.tries++;
-            if (newGame.tries > newGame.maxTries){
+            if (newGame.tries > newGame.maxTries) {
                 newStatistics.loses++;
                 newStatistics.total++;
                 setStatistics(newStatistics);
                 initGame(newGame);
             } else {
                 let message = "Pick a smaller number";
-                if (newGame.guess < newGame.secret){
+                if (newGame.guess < newGame.secret) {
                     message = "Pick a larger number";
                 }
                 newGame.moves.push(new Move(newGame.guess, message));
@@ -86,6 +91,8 @@ export default function Game() {
             setGame(newGame);
         }
     }
+
+    //endregion
 
     //region game-related utility functions
     function createMaxTries(level) {
@@ -103,6 +110,44 @@ export default function Game() {
 
     //endregion
 
+    let triesBadge = "";
+    if (game.tries > 0){
+        triesBadge = <Badge className="alert-primary"
+                                label="Tries"
+                                id="tries"
+                                value={game.tries}></Badge>;
+    }
+    let movesCard = "";
+    if (game.moves.length > 0){
+        movesCard =  <div className="card">
+            <div className="card-header">
+                <h3 className="card-title">Moves</h3>
+            </div>
+            <div className="card-body">
+                <table className="table table-bordered table-hover table-striped table-responsive">
+                    <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Guess</th>
+                        <th>Message</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {
+                        game.moves.map((move, index) =>
+                            <tr key={move.guess + index.toString()}>
+                                <td>{index + 1}</td>
+                                <td>{move.guess}</td>
+                                <td>{move.message}</td>
+                            </tr>
+                        )
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
     return (
         <div className="container">
             <div className="card">
@@ -114,10 +159,7 @@ export default function Game() {
                            label="Game Level"
                            id="gamelevel"
                            value={game.level}></Badge>
-                    <Badge className="alert-primary"
-                           label="Tries"
-                           id="tries"
-                           value={game.tries}></Badge>
+                    {triesBadge}
                     <Badge className="alert-primary"
                            label="Remaining Tries"
                            id="remainingTries"
@@ -144,33 +186,7 @@ export default function Game() {
                 </div>
             </div>
             <p></p>
-            <div className="card">
-                <div className="card-header">
-                    <h3 className="card-title">Moves</h3>
-                </div>
-                <div className="card-body">
-                    <table className="table table-bordered table-hover table-striped table-responsive">
-                        <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Guess</th>
-                            <th>Message</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {
-                            game.moves.map((move, index) =>
-                                <tr key={move.guess + index.toString()}>
-                                    <td>{index + 1}</td>
-                                    <td>{move.guess}</td>
-                                    <td>{move.message}</td>
-                                </tr>
-                            )
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            {movesCard}
             <p></p>
             <GameStatistics stats={statistics}></GameStatistics>
         </div>
